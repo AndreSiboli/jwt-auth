@@ -1,2 +1,4 @@
-.env
-todo.txt
+.env*
+todo
+node_modules/
+users/

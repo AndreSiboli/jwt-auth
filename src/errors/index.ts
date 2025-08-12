@@ -1,30 +1,30 @@
 import { Response } from "express";
 
-export function badRequestError(res: Response) {
+export function badRequestStatus(res: Response, message?: string) {
   return res.status(400).json({
-    message: `It was not possible to procced.`,
+    message: message || "It was not possible to procced.",
   });
 }
 
-export function authorizationFailure(res: Response) {
+export function unauthorizedStatus(res: Response, message?: string) {
   return res.status(401).json({
-    message: `Access Denied.`,
+    message: message || `Access Denied.`,
   });
 }
 
-export function notFoundError(res: Response, username: string) {
+export function notFoundStatus(res: Response, message?: string) {
   return res.status(404).json({
-    message: `The user ${username} was not found.`,
+    message: message || "Not found.",
   });
 }
 
-export function alredyExists(res: Response, name: string) {
+export function alredyExistsStatus(res: Response, name: string) {
   return res.status(409).json({
     message: `This ${name} already exists.`,
   });
 }
 
-export function genericError(res: Response, err?: Error) {
+export function internalServerErrorStatus(res: Response, err?: Error) {
   return res.status(500).json({
     message: err?.message || `An error has occurred.`,
   });
