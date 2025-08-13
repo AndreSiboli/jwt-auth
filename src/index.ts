@@ -3,8 +3,9 @@ import "dotenv/config";
 import express from "express";
 import { connectToDatabase } from "./infra/db/db.mongoose";
 import session from "./session/session.routes";
-import users from "./user/user.routes";
+import user from "./user/user.routes";
 import token from "./token/token.routes";
+import users from "./users/users.routes";
 import middleware from "./middlewares/token.middleware";
 import cookieparser from "cookie-parser";
 import cors from "cors";
@@ -31,7 +32,8 @@ app.use(
 
   app.use("/", session);
   app.use("/", token);
-  app.use("/users", middleware, users);
+  app.use("/user", middleware, user);
+  app.use("/users", users);
 
   const PORT = process.env.API_PORT || 8080;
   app.listen(PORT);

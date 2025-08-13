@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { compare, encrypt } from "../common/lib/encrypt";
 import { isPasswordValid, isUsernameValid } from "./user.utils";
-import { alredyExistsStatus, internalServerErrorStatus } from "../errors";
+import { alreadyExistsStatus, internalServerErrorStatus } from "../errors";
 import {
   deleteUserById,
   getUserPassword,
@@ -68,7 +68,8 @@ export async function updateUsername(req: Request, res: Response) {
     const { username } = req.body;
 
     if (!username) throw new Error();
-    if (await getUsername(username)) return alredyExistsStatus(res, "username");
+    if (await getUsername(username))
+      return alreadyExistsStatus(res, "username");
 
     if (!isUsernameValid(username)) throw new Error();
 

@@ -22,6 +22,7 @@ const users = new Schema<IUser, UserModel>({
     type: String,
     required: true,
     unique: true,
+    lowercase: true,
   },
   password: {
     type: String,
@@ -48,5 +49,10 @@ users.methods.noSensitiveData = function () {
   const { password, ...safeData } = this.toObject();
   return safeData;
 };
+
+users.index(
+  { username: 1 },
+  { unique: true, collation: { locale: "en", strength: 2 } }
+);
 
 export default mongoose.model<IUser, UserModel>("users", users);

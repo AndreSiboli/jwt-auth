@@ -50,5 +50,9 @@ export async function getUserPassword(id: string) {
 }
 
 export async function getUsername(username: string) {
-  return (await usersModel.findOne({ username }))?.username;
+  return (
+    await usersModel
+      .findOne({ username })
+      .collation({ locale: "en", strength: 2 })
+  )?.username;
 }

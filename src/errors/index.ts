@@ -2,7 +2,7 @@ import { Response } from "express";
 
 export function badRequestStatus(res: Response, message?: string) {
   return res.status(400).json({
-    message: message || "It was not possible to procced.",
+    message: message || "It was not possible to proceed.",
   });
 }
 
@@ -18,7 +18,7 @@ export function notFoundStatus(res: Response, message?: string) {
   });
 }
 
-export function alredyExistsStatus(res: Response, name: string) {
+export function alreadyExistsStatus(res: Response, name: string) {
   return res.status(409).json({
     message: `This ${name} already exists.`,
   });
