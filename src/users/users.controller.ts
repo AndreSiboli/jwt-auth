@@ -1,17 +1,23 @@
 import { Request, Response } from "express";
 import { getUserbyUsername, searchByUsername } from "./users.service";
-import { notFoundStatus } from "../errors";
+import { httpResponses } from "../errors/httpResponses";
+import { handleUsersError } from "../users/users.errors";
+import { NotFoundError } from "../common/errors";
 
 export async function getUser(req: Request, res: Response) {
   try {
     const { username } = req.params;
 
     const user = await getUserbyUsername(username);
-    if (!user) return notFoundStatus(res, "User not found.");
+    if (!user) {
+      throw new NotFoundError("User not found.", {
+        attemptedAction: "GET /users/:username",
+      });
+    }
 
-    res.status(200).json({ user });
+    httpResponses.ok(res, { data: { user } });
   } catch (err) {
-    res.status(500).json({ message: "error" });
+    handleUsersError(res, err);
   }
 }
 
@@ -25,16 +31,16 @@ export async function searchUsers(req: Request, res: Response) {
     if (typeof cursor === "string") options.cursor = cursor;
 
     const users = await searchByUsername(username, options);
-    if (!users.length)
-      return res
-        .status(404)
-        .json({ message: "An users with this username was not found." });
+    if (!users.length) {
+      throw new NotFoundError("An users with this username was not found.", {
+        attempedAction: "GET /users/search/:username",
+      });
+    }
 
     const nextCursor = users[users.length - 1]._id;
 
-    res.status(200).json({ users, nextCursor });
+    httpResponses.ok(res, { data: { users, nextCursor } });
   } catch (err) {
-    console.error(err, "caiu aqui?");
-    res.status(500).json({ message: "error" });
+    handleUsersError(res, err);
   }
 }

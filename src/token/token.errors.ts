@@ -1,28 +1,33 @@
 import { Response } from "express";
-import { unauthorizedStatus } from "../errors";
+import { httpResponses } from "../errors/httpResponses";
 import {
   JsonWebTokenError,
   NotBeforeError,
   TokenExpiredError,
 } from "jsonwebtoken";
-import { UnauthorizedError } from "../common/errors";
+import { AppError, UnauthorizedError } from "../common/errors";
 
-export function handleJwtError(res: Response, err: unknown): boolean {
+export function handleTokenError(res: Response, err: unknown) {
   const jwtErrors = [
-    [JsonWebTokenError, "Invalid token signature"],
-    [TokenExpiredError, "Token has expired"],
-    [NotBeforeError, "Token not valid yet"],
-    [UnauthorizedError, "Unauthorized"],
+    [JsonWebTokenError, httpResponses.unauthorized],
+    [TokenExpiredError, httpResponses.unauthorized],
+    [NotBeforeError, httpResponses.unauthorized],
+    [UnauthorizedError, httpResponses.unauthorized],
   ] as const;
 
-  console.log(err instanceof UnauthorizedError);
-
-  for (const [ErrorType, message] of jwtErrors) {
+  for (const [ErrorType, response] of jwtErrors) {
     if (err instanceof ErrorType) {
-      unauthorizedStatus(res, "Unauthorized.");
-      console.error(err.message || message);
+      if (err instanceof AppError) console.error(err.toJSON());
+      else console.error((err as Error).stack || (err as Error).message);
+      
+      response(res, err.message);
       return true;
     }
+  }
+
+  if (err instanceof Error) {
+    console.error(err.stack || err.message);
+    httpResponses.internal(res);
   }
 
   return false;

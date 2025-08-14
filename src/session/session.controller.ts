@@ -5,12 +5,7 @@ import {
   getUserByEmail,
   getUsername,
 } from "../user/user.service";
-import {
-  unauthorizedStatus,
-  badRequestStatus,
-  internalServerErrorStatus,
-  notFoundStatus,
-} from "../errors";
+import { httpResponses } from "../errors/httpResponses";
 import { createCookie, getCookie } from "./session.cookies";
 import { sendRecoveryPassword } from "./session.service";
 import {
@@ -31,6 +26,13 @@ import {
 import config from "./session.config";
 import usersModel from "../user/user.model";
 import crypto from "crypto";
+import {
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+  UnauthorizedError,
+} from "../common/errors";
+import { handleSessionError } from "./session.errors";
 
 export async function verifyLogin(req: Request, res: Response) {
   try {
@@ -40,33 +42,38 @@ export async function verifyLogin(req: Request, res: Response) {
       email,
       "-__v -passwordResetExpires -passwordResetToken"
     );
-    if (!user) throw new Error();
+    const isValidPassword = user
+      ? await compare(password, user.password)
+      : false;
 
-    const isValidPassword = await compare(password, user.password);
-    if (!isValidPassword) throw new Error();
+    if (!user || !isValidPassword) {
+      throw new UnauthorizedError("Email or password is wrong.", {
+        email,
+        attemptedAction: "GET /sign-in",
+      });
+    }
 
     const token = signToken(user.id);
     const refreshToken = signRefreshToken(user.id);
-    if (!token || !refreshToken) throw new Error();
 
     createCookie(res, "accessToken", token, { maxAge: config.cookieExpiresIn });
     createCookie(res, "refreshToken", refreshToken, {
       maxAge: config.refreshCookieExpiresIn,
     });
 
-    const savedInDB = await saveRefreshTokenDB({
+    await saveRefreshTokenDB({
       user_id: user.id,
       refresh_token: refreshToken,
     });
-    if (!savedInDB) throw new Error();
 
     const noSensitiveData = user.noSensitiveData();
 
-    res
-      .status(200)
-      .json({ user: noSensitiveData, messeage: "Login successfully" });
+    httpResponses.ok(res, {
+      data: { user: noSensitiveData },
+      message: "Sign-in successfully.",
+    });
   } catch (err) {
-    unauthorizedStatus(res);
+    handleSessionError(res, err);
   }
 }
 
@@ -74,42 +81,66 @@ export async function verifyRegister(req: Request, res: Response) {
   try {
     const { email, username, password, confirmPassword } = req.body;
 
-    if (await getUsername(username))
-      throw new Error("This username already exists");
-    if (await getUserByEmail(email, "-password"))
-      throw new Error("This email already exists");
+    if (!isEmailValid(email)) {
+      throw new BadRequestError(
+        "Email is not valid. Example: usuario@dominio.com",
+        { attemptedAction: "POST /sign-up" }
+      );
+    }
+    if (!isUsernameValid(username)) {
+      throw new BadRequestError(
+        "Username is not valid. It must be 3-20 characters and contains only letter/number",
+        { attemptedAction: "POST /sign-up" }
+      );
+    }
+    if (!isPasswordValid(password, confirmPassword)) {
+      throw new BadRequestError(
+        "Password is not valid. It must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one symbol.",
+        { attemptedAction: "POST /sign-up" }
+      );
+    }
 
-    if (!isEmailValid(email)) throw new Error();
-    if (!isUsernameValid(username)) throw new Error();
-    if (!isPasswordValid(password, confirmPassword)) throw new Error();
+    if (await getUsername(username)) {
+      throw new ConflictError("This username already exists.", {
+        attemptedAction: "POST /sign-up",
+      });
+    }
+    if (await getUserByEmail(email, "-password")) {
+      throw new ConflictError("This email already exists.", {
+        attemptedAction: "POST /sign-up",
+      });
+    }
 
     await createUserInDB({ ...req.body });
 
-    return res.status(201).json({ message: "User registered successfully" });
+    httpResponses.created(res, { message: "User registered successfully." });
   } catch (err) {
-    internalServerErrorStatus(res, err as Error);
+    handleSessionError(res, err);
   }
 }
 
 export async function verifyLogout(req: Request, res: Response) {
   try {
-    const refresh = getCookie(req, "refreshToken");
+    const refreshToken = getCookie(req, "refreshToken");
+    if (!refreshToken) {
+      throw new BadRequestError("No token provided.", {
+        attemptedAction: "GET /sign-out",
+      });
+    }
 
-    if (!refresh) return badRequestStatus(res, "No token provided.");
-
-    const decoded = decodeToken(refresh);
+    const decoded = decodeToken(refreshToken);
 
     await deleteRefreshTokenDB({
       user_id: (decoded as JwtPayload).id,
-      refresh_token: refresh,
+      refresh_token: refreshToken,
     });
 
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
 
-    res.status(200).json({ message: "You were disconected." });
+    httpResponses.ok(res, { message: "You were disconnected." });
   } catch (err) {
-    return internalServerErrorStatus(res);
+    handleSessionError(res, err);
   }
 }
 
@@ -118,7 +149,11 @@ export async function redefinePassword(req: Request, res: Response) {
     const { email } = req.body;
 
     const user = await usersModel.findOne({ email });
-    if (!user) return notFoundStatus(res, "User not found.");
+    if (!user) {
+      throw new NotFoundError("User not found.", {
+        attemptedAction: "POST /forget-password",
+      });
+    }
 
     const resetToken = crypto.randomBytes(32).toString("hex");
     const hashedToken = crypto
@@ -134,10 +169,9 @@ export async function redefinePassword(req: Request, res: Response) {
 
     await sendRecoveryPassword(email, resetURL);
 
-    res.status(200).json({ message: "Email sent." });
+    httpResponses.ok(res, { message: "Email sent successfully." });
   } catch (err) {
-    console.error(err);
-    internalServerErrorStatus(res);
+    handleSessionError(res, err);
   }
 }
 
@@ -146,7 +180,9 @@ export async function resetPassword(req: Request, res: Response) {
     const { password, confirmPassword } = req.body;
     const { token } = req.params;
 
-    if (password !== confirmPassword) throw new Error();
+    if (password !== confirmPassword) {
+      throw new BadRequestError("Passwords doesn't match.");
+    }
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
@@ -154,16 +190,21 @@ export async function resetPassword(req: Request, res: Response) {
       passwordResetToken: hashedToken,
       passwordResetExpires: { $gt: Date.now() },
     });
-    if (!user) throw new Error();
+    if (!user) {
+      throw new BadRequestError("Could not reset password.", {
+        attemptedAction: "POST /reset-password",
+        resetToken: token,
+        internalMessage: "Failed to get password token.",
+      });
+    }
 
     user.password = await encrypt(password);
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save();
 
-    res.status(200).json({ message: "Password updated successfully" });
+    httpResponses.ok(res, { message: "Password updated successfully." });
   } catch (err) {
-    console.error(err);
-    internalServerErrorStatus(res);
+    handleSessionError(res, err);
   }
 }

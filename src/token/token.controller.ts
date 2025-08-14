@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { internalServerErrorStatus } from "../errors";
+import { httpResponses } from "../errors/httpResponses";
 import { getUserById } from "../user/user.service";
 import { updateRefreshTokenDB } from "./token.service";
 import { createCookie, getCookie } from "../session/session.cookies";
@@ -10,17 +10,16 @@ import {
   verifyRefreshToken,
   verifyToken,
 } from "./token.utils";
-import { handleJwtError } from "./token.errors";
+import { handleTokenError } from "./token.errors";
 import { JwtPayload } from "./token.types";
 import { UnauthorizedError } from "../common/errors";
 
 export async function verifySession(req: Request, res: Response) {
   try {
     verifyToken(req);
-    res.status(200).json({ message: "User is authenticated." });
+    httpResponses.ok(res, { message: "User is authenticated." });
   } catch (err) {
-    if (handleJwtError(res, err)) return;
-    return internalServerErrorStatus(res);
+    handleTokenError(res, err);
   }
 }
 
@@ -54,9 +53,8 @@ export async function refreshSession(req: Request, res: Response) {
     if (!response)
       throw new UnauthorizedError("Update refresh token was not possible.");
 
-    res.status(200).json({ message: "Session successfully renewed." });
+    httpResponses.ok(res, { message: "Session successfully renewed." });
   } catch (err) {
-    if (handleJwtError(res, err)) return;
-    return internalServerErrorStatus(res);
+    handleTokenError(res, err);
   }
 }

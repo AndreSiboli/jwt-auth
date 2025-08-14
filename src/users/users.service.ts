@@ -23,7 +23,8 @@ export async function searchByUsername(
 export async function getUserbyUsername(username: string) {
   return await userModel
     .findOne({ username })
-    .select("-__v -password -passwordResetToken -passwordResetExpires");
+    .select("-__v -password -passwordResetToken -passwordResetExpires")
+    .collation({ locale: "en", strength: 2 });
 }
 
 export async function getUserById(id: string, fields?: string) {
