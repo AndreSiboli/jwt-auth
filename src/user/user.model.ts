@@ -31,7 +31,7 @@ const users = new Schema<IUser, UserModel>({
   username: {
     type: String,
     required: true,
-    unique: true,
+    // unique: true, //It's set down bellow
   },
   createdAt: {
     type: Date,
