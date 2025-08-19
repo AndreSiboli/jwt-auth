@@ -3,7 +3,7 @@ import { refreshSession, verifySession } from "./token.controller";
 
 const router = express.Router();
 
-router.get("/token", verifySession);
+router.get("/verify-token", verifySession);
 
 router.post("/refresh-token", refreshSession);
 

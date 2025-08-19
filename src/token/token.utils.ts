@@ -35,8 +35,6 @@ export function verifyToken(req: Request) {
 export function verifyRefreshToken(req: Request) {
   const refresh = getCookie(req, "refreshToken");
   return jwt.verify(refresh, config.secretRefreshToken);
-  // req.user = { id: (decoded as JwtPayload).id };
-  // return decoded;
 }
 
 export function decodeToken(token: string, complete = false) {

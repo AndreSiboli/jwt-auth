@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon ./dist/src/index.js",
     "start": "node ./dist/src/index.js",
+    "dev": "nodemon ./dist/src/index.js",
+    "build": "tsc",
     "ts": "tsc --watch"
   },
   "author": "André Siboli",
@@ -29,6 +30,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.2.1",
     "@types/nodemailer": "^6.4.17",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "typescript": "^5.9.2"
   }
 }
