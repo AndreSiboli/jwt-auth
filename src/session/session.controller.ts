@@ -5,7 +5,7 @@ import {
   getUserByEmail,
   getUsername,
 } from "../user/user.service";
-import { httpResponses } from "../errors/httpResponses";
+import { httpResponses } from "../common/http/httpResponses";
 import { createCookie, getCookie } from "./session.cookies";
 import { sendRecoveryPassword } from "./session.service";
 import {

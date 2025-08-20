@@ -5,7 +5,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "../common/errors";
-import { httpResponses } from "../errors/httpResponses";
+import { httpResponses } from "../common/http/httpResponses";
 import { Response } from "express";
 
 export function handleUsersError(res: Response, err: unknown) {

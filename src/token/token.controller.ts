@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { httpResponses } from "../errors/httpResponses";
+import { httpResponses } from "../common/http/httpResponses";
 import { getUserById } from "../user/user.service";
 import { updateRefreshTokenDB } from "./token.service";
 import { createCookie, getCookie } from "../session/session.cookies";

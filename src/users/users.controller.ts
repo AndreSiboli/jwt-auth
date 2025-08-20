@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { getUserbyUsername, searchByUsername } from "./users.service";
-import { httpResponses } from "../errors/httpResponses";
+import { httpResponses } from "../common/http/httpResponses";
 import { handleUsersError } from "../users/users.errors";
 import { NotFoundError } from "../common/errors";
 

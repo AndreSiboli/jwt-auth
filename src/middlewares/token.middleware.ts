@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { httpResponses } from "../errors/httpResponses";
+import { httpResponses } from "../common/http/httpResponses";
 import { getCookie } from "../session/session.cookies";
 import config from "../token/token.config";
 import { UnauthorizedError } from "../common/errors";

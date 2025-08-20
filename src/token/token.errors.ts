@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { httpResponses } from "../errors/httpResponses";
+import { httpResponses } from "../common/http/httpResponses";
 import {
   JsonWebTokenError,
   NotBeforeError,
@@ -19,7 +19,7 @@ export function handleTokenError(res: Response, err: unknown) {
     if (err instanceof ErrorType) {
       if (err instanceof AppError) console.error(err.toJSON());
       else console.error((err as Error).stack || (err as Error).message);
-      
+
       response(res, err.message);
       return true;
     }

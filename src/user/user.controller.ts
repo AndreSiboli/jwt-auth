@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { compare, encrypt } from "../common/lib/encrypt";
 import { isPasswordValid, isUsernameValid } from "./user.utils";
-import { httpResponses } from "../errors/httpResponses";
+import { httpResponses } from "../common/http/httpResponses";
 import {
   deleteUserById,
   getUserPassword,
