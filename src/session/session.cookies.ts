@@ -12,7 +12,7 @@ export function createCookie(
     secure: true,
     sameSite: "lax",
     path: "/",
-    maxAge: config.cookieExpiresIn,
+    maxAge: config.cookieDefaultExpiresIn,
     ...options,
   });
 }

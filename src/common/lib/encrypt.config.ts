@@ -1,5 +1,5 @@
 import "dotenv/config";
 
 export default {
-  salt: parseInt(process.env.API_SALT),
+  salt: parseInt(process.env.SESSION_SALT_ROUNDS),
 };

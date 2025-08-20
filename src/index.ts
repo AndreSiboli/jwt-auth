@@ -1,5 +1,7 @@
-// import dotenv from "dotenv";
+import dotenv from "dotenv";
 import "dotenv/config";
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
+
 import express from "express";
 import { connectToDatabase } from "./infra/db/db.mongoose";
 import session from "./session/session.routes";
@@ -10,7 +12,6 @@ import middleware from "./middlewares/token.middleware";
 import cookieparser from "cookie-parser";
 import cors from "cors";
 
-// dotenv.config({ path: [".env.development", ".env.production"] });
 const app = express();
 
 app.use(express.json());
@@ -35,6 +36,6 @@ app.use(
   app.use("/user", middleware, user);
   app.use("/users", users);
 
-  const PORT = process.env.API_PORT || 8080;
+  const PORT = process.env.PORT || 8080;
   app.listen(PORT);
 })();
